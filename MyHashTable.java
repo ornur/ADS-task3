@@ -1,23 +1,9 @@
 package org.example;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-
 public class MyHashTable<K,V> {
-    public int getNumElementsInBucket(int i) {
-        return 0;
-    }
-
-    public List<List<HashNode<K,V>>> getBuckets() {
-        return null;
-    }
-
     private static class HashNode<K,V>{
         private final K key;
         private V value;
-        private HashNode<K,V>  next;
+        private HashNode<K,V> next;
 
         public HashNode(K key, V value){
             this.key = key;
@@ -30,96 +16,99 @@ public class MyHashTable<K,V> {
         }
     }
 
-    private final List<List<HashNode<K,V>>> buckets;
-    private int numElements;
-
+    private HashNode[] chainArray;
+    private int M = 11;
+    private int size = 0;
+    
     public MyHashTable(){
-        buckets = new ArrayList<>();
-        for (int i = 0; i < 16; i++) { // Initialize with 16 buckets
-            buckets.add(new LinkedList<>());
-        }
-        numElements = 0;
+        chainArray = new HashNode[M];
     }
 
     public MyHashTable(int M){
-        buckets = new ArrayList<>();
-        for (int i = 0; i < M; i++) { // Initialize with M buckets
-            buckets.add(new LinkedList<>());
-        }
-        numElements = 0;
+        this.M = M;
+        chainArray = new HashNode[M];
     }
-
     private int hash(K key){
-        int h = 0;
-        for (int i = 0; i < key.toString().length(); i++) {
-            h = 31 * h + key.toString().charAt(i);
-        }
-        return h;
+        return (key.hashCode() & 0x7fffffff) % M;
     }
-
     public void put(K key, V value){
-        int bucketIndex = hash(key) % buckets.size();
-        List<HashNode<K,V>> bucket = buckets.get(bucketIndex);
-        for (HashNode<K,V> node : bucket) {
-            if (node.key.equals(key)) { // If key already exists, update value and return
+        int index = hash(key);
+        HashNode<K,V> node = chainArray[index];
+        while(node != null){
+            if(node.key.equals(key)){
                 node.value = value;
                 return;
             }
+            node = node.next;
         }
-        // Key not found, add new node
         HashNode<K,V> newNode = new HashNode<>(key, value);
-        bucket.add(newNode);
-        numElements++;
+        newNode.next = chainArray[index];
+        chainArray[index] = newNode;
+        size++;
     }
-
+    
     public V get(K key){
-        int bucketIndex = hash(key) % buckets.size();
-        List<HashNode<K,V>> bucket = buckets.get(bucketIndex);
-        for (HashNode<K,V> node : bucket) {
-            if (node.key.equals(key)) { // If key found, return value
+        int index = hash(key);
+        HashNode<K,V> node = chainArray[index];
+        while(node != null){
+            if(node.key.equals(key)){
                 return node.value;
             }
+            node = node.next;
         }
-        // Key not found
         return null;
     }
 
-    public int getNumBuckets() {
-        return buckets.size();
+    public V remove(K key){
+        int index = hash(key);
+        HashNode<K,V> node = chainArray[index];
+        HashNode<K,V> prev = null;
+        while(node != null){
+            if(node.key.equals(key)){
+                if(prev == null){
+                    chainArray[index] = node.next;
+                }else{
+                    prev.next = node.next;
+                }
+                size--;
+                return node.value;
+            }
+            prev = node;
+            node = node.next;
+        }
+        return null;
     }
 
-    public boolean contains(V value){
-        for (List<HashNode<K,V>> bucket : buckets) {
-            for (HashNode<K,V> node : bucket) {
-                if (node.value.equals(value)) { // If value found, return true
-                    return true;
-                }
-            }
-        }
-        // Value not found
-        return false;
+    public boolean contains(K key){
+        return get(key) != null;
     }
 
     public K getKey(V value){
-        for (List<HashNode<K,V>> bucket : buckets) {
-            for (HashNode<K,V> node : bucket) {
-                if (node.value.equals(value)) { // If value found, return key
+        for(int i = 0; i < M; i++){
+            HashNode<K,V> node = chainArray[i];
+            while(node != null){
+                if(node.value.equals(value)){
                     return node.key;
                 }
+                node = node.next;
             }
         }
-        // Value not found
         return null;
     }
-
-    public int getBucketSize(int index) {
-        List<HashNode<K,V>> bucket = buckets.get(index);
-        return bucket.size();
-    }
-
-    public void printBucketSizes() {
-        for (int i = 0; i < buckets.size(); i++) {
-            System.out.println("Bucket " + i + ": " + getBucketSize(i));
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < M; i++){
+            HashNode<K,V> node = chainArray[i];
+            if(node != null){
+                sb.append("[").append(i).append("]");
+                while(node != null){
+                    sb.append(node).append(" ");
+                    node = node.next;
+                }
+                sb.append("\n");
+            }
         }
+        return sb.toString();
     }
 }

@@ -1,25 +1,25 @@
 package org.example;
 
+import java.util.Random;
 
 public class Main {
+    static Student randomStudent(){
+        Random random = new Random();
+        StringBuilder name = new StringBuilder();
+        for(int i = 0; i < 10; i++){
+            name.append((char)(random.nextInt(26) + 'a'));
+        }
+        return new Student(name.toString());
+    }
+    static MyTestingClass randomMyTestingClass(){
+        Random random = new Random();
+        return new MyTestingClass(random.nextInt(100));
+    }
     public static void main(String[] args) {
-        // Create a new MyHashTable instance with MyTestingClass as key and Student as value
-        MyHashTable<MyTestingClass, Student> table = new MyHashTable<>();
-
-        // Add random 10000 elements to the table
-        for (int i = 0; i < 10000; i++) {
-            MyTestingClass key = new MyTestingClass();
-            Student value = new Student("John Doe", i);
-            table.put(key, value);
+        MyHashTable<MyTestingClass, Student> myHashTable = new MyHashTable<>(200);
+        for(int i = 0; i < 50; i++){
+            myHashTable.put(randomMyTestingClass(), randomStudent());
         }
-
-        // Print the number of elements in each bucket
-        for (int i = 0; i < table.getNumBuckets(); i++) {
-            System.out.println("Bucket " + i + ": " + table.getNumElementsInBucket(i));
-        }
-
-        // Tune the hashCode method in MyTestingClass
-        // ...
-
+        System.out.println(myHashTable);
     }
 }
